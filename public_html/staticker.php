@@ -1,5 +1,6 @@
 <?php
 # Tiny tool for generate static index.html
+# https://github.com/uzulla/tiny-static-index-html-generator.php
 # AUTHOR: uzulla
 # LICENSE: MIT
 

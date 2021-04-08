@@ -6,5 +6,5 @@
 $path = $_SERVER['REQUEST_URI'];
 echo "<h1>" . htmlspecialchars($path, ENT_NOQUOTES) . "</h1>" . PHP_EOL;
 
-echo "<pre>";
-var_dump($_SERVER);
+// echo "<pre>";
+// var_dump($_SERVER);

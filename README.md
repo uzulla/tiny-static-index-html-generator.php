@@ -4,6 +4,10 @@ Save response body to `/abc/index.html` from `http://example.jp/abc` when set `/
 
 Use it when need a small static cache.
 
+## AT FIRST (every time in use)
+
+PLEASE BACKUP YOUR SITE.
+
 ## description of files.
 
 - `public_html/staticker.php` main app
