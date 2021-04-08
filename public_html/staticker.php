@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 define("DRY_RUN", false);
 define("CREATE_DIR_IF_NOT_EXISTS", false);
+define("REMOVE_EMPTY_DIR", false);
 define("USER_NAME", 'super_admin_wow');
 # please generate your hashed password by bellow code.
 # php -r 'echo password_hash("default_password_1234!", PASSWORD_DEFAULT).PHP_EOL;'
@@ -78,6 +79,7 @@ function show_form(string $base_url, string $base_path, array $path_list): void
     <html>
     <body>
     <h1>create static file, or purge</h1>
+    <h2 style='color:red'>PLEASE BACKUP BEFORE IN USE, PLEASE DON'T FORGET.</h2>
     END;
 
     if (DRY_RUN) {
@@ -86,12 +88,12 @@ function show_form(string $base_url, string $base_path, array $path_list): void
 
     echo <<< "END"
     <form method='post'>
-        <input type='hidden' name='mode' value='purge'>
-        <button type='submit'>purge</button>
-    </form>
-    <form method='post'>
         <input type='hidden' name='mode' value='create'>
         <button type='submit'>create</button>
+    </form>
+    <form method='post'>
+        <input type='hidden' name='mode' value='purge'>
+        <button type='submit'>purge</button>
     </form>
     <pre>
     <h3>List of target files.</h3>
@@ -123,19 +125,7 @@ function create_static(string $base_url, string $base_path, array $path_list): v
         $remote_url = $base_url . $path;
         $local_full_path = $base_path . $path;
         $local_full_path_index_html = $local_full_path . "/index.html";
-        echo "download {$remote_url} => {$local_full_path}" . PHP_EOL;
-
-        if (CREATE_DIR_IF_NOT_EXISTS && !DRY_RUN) {
-            if (!file_exists($local_full_path)) {
-                mkdir($local_full_path, 0777, true);
-            }
-        }
-
-        // check dir exists
-        if (!file_exists($local_full_path) || !is_dir($local_full_path)) {
-            echo "ERROR ABORT: target dir is not exists or not dir(ex:file) : {$local_full_path} " . PHP_EOL;
-            exit;
-        }
+        echo "download {$remote_url} => {$local_full_path_index_html}" . PHP_EOL;
 
         $context = stream_context_create(['http' => ['ignore_errors' => true]]);
         $html = file_get_contents($remote_url, false, $context);
@@ -145,8 +135,22 @@ function create_static(string $base_url, string $base_path, array $path_list): v
             exit;
         }
 
-        if (!DRY_RUN) {
+        if (CREATE_DIR_IF_NOT_EXISTS && !file_exists($local_full_path)) {
+            echo "create dir: {$local_full_path}" . PHP_EOL;
+            if (!DRY_RUN) {
+                mkdir($local_full_path, 0777, true);
+            }
+        }
 
+        // check dir exists
+        if (!file_exists($local_full_path) || !is_dir($local_full_path)) {
+            echo "ERROR ABORT: target dir is not exists or not dir(ex:file) : {$local_full_path} " . PHP_EOL;
+            if (!DRY_RUN) {
+                exit;
+            }
+        }
+
+        if (!DRY_RUN) {
             file_put_contents($local_full_path_index_html, $html);
         }
     }
@@ -170,6 +174,11 @@ function purge_static(string $base_url, string $base_path, array $path_list): vo
 
         if (!DRY_RUN) {
             unlink($local_full_path_index_html);
+        }
+
+        if (REMOVE_EMPTY_DIR) {
+            echo "remove dir (if empty) {$local_full_path}" . PHP_EOL;
+            @rmdir($local_full_path); // fail here, if not empty dir.
         }
     }
     echo "DONE" . PHP_EOL;
